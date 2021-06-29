@@ -3,14 +3,18 @@ import sys
 import time
 import requests
 import json
+import argparse
 import threading as th
 
+parser = argparse.ArgumentParser()
+parser.add_argument('address', type=str, help='ip/host Name/FQDN the controller is running on')
+parser.add_argument('port', type=str, help='port number the controller is running on', )
+parser.add_argument('interval', type=int, help='refresh interval in seconds')
+args = parser.parse_args()
 
-ip = 'localhost'    # IP address/hostname/fqdn of server that is controller
-port = "3080"       # Release VM's use 80, local install, and install via PIP/APT use 3080
-protocol_type = 'HTTP'      # If using HTTPS, change to True
+protocol_type = 'http'      # If using HTTPS, change to True
 
-url = f'{protocol_type}://{ip}:{port}/v2/'
+url = f'{protocol_type}://{args.address}:{args.port}/v2/'
 
 # Define colors
 c_red = '\33[31m'
@@ -67,9 +71,7 @@ def get_json_resp(api_call):
     r = ''
 
     try:
-
         r = requests.get(url + api_call)
-
         if r.status_code == 200:
             # Convert response from controller into JSON Dict
             return json.loads(json.dumps(r.json()))        
@@ -90,8 +92,13 @@ if os.name == 'nt':
                     ("visible", ctypes.c_byte)]
 
 clear_cmd = get_screen_clear_cmd()
+
+
+#exit()
+
 keep_going = True
 hide_cursor()
+os.system(clear_cmd)
 th.Thread(target=key_capture_thread, args=(), name='key_capture_thread', daemon=True).start()
 
 while keep_going:
@@ -100,7 +107,7 @@ while keep_going:
 
         resp = get_json_resp('version')
         version = resp['version']
-        print(f'\nController: {ip}\nVersion: {version:20}')
+        print(f'\nController: {args.address}\nVersion: {version:20}')
         resp = get_json_resp('computes')
 
         # Print header row
@@ -137,12 +144,13 @@ while keep_going:
             print(f'{host:15} | {status:16} | {cpu:4} | {ram:4}')
         
         print('\nPress [ENTER] to quit')
-        time.sleep(1)
+        time.sleep(args.interval)
         os.system(clear_cmd)
 
     except:
-        print('\nError: Failed most likely due to not being able to establish a connection')
+        print(f'\nError: Failed to connect to server: {args.address}:{args.port} most likely due to not being able to establish a connection')
         show_cursor()
+        break
 
 print('Exiting')
 show_cursor()
