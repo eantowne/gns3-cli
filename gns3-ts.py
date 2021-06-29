@@ -45,11 +45,15 @@ def get_open_project():
     resp = get_json_resp('projects')
     for project in range(len(resp)):
 
-        print(resp[project]['status'])
+        #print(resp[project]['status'])
         
         if resp[project]['status'] == 'opened':
            
             return resp[project]['project_id'], resp[project]['name']
+
+        else:
+
+            return 'closed'
 
 def print_nodes(uuid):
 
@@ -76,16 +80,13 @@ def print_nodes(uuid):
 
         print(f'{name:25} | {status:15} | {console_type:15} {console_port}')
 
-try:
-    project = get_open_project()
-except:
-    exit('\nThere is currently not an open project, please open one, and retry.')
-
+if get_open_project() == 'closed':
     
+    exit('\nNo open project, please open one and retry.')
     
-
 else:
 
+    project = get_open_project()
     project_id = project[0]
     project_name = project[1]
     print(f'\nCurrently open project: {c_green + project[1] + c_default:15}\nUUID: {project[0]}\n')
